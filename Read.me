@@ -20,11 +20,14 @@ pip install pyyaml requests
 
 Issue 1: Initially when you run you will get the exception since one of the endpoints in the input doest have any methods. Since its null it will throw an exception.
 Solution: 
+  Code Change:
    method = endpoint.get('method', 'GET')
    Added the default value to GET and this ensures that endpoints without a specified method default to GET, as required by the assignment.
 
 Issue 2: Domain Grouping Without Port
   As per the current code "endpoint["url"].split("//")[-1].split("/")[0]" works for simple URLs but fails when the URL includes a port number. Tested by giving the URL with port.
+
+Code Change: 
 Split the result further to remove the port:
   domainUrl = endpoint["url"].split("//")[-1].split("/")[0]
   domain = domainUrl.split(":")[0]
@@ -34,6 +37,7 @@ Split the result further to remove the port:
 
 Feature 1:
   Need to add the check for response time. If its more than 500ms it should be considered unavailable.
+    Code Change:
         startReqTime = time.time()
         response = requests.request(method, url, headers=headers, json=body)
         timeTaken = (time.time() - startReqTime) * 1000
@@ -46,16 +50,17 @@ Feature 1:
     At first, the code was keeping track of domain stats outside the loop. That means the counts kept adding up forever — even after every 15-second check. So the 
     availability percentage wasn’t accurate for each new cycle. It showed an average over time instead of just the current status.
 
-  Fix - I moved the stats tracking inside the while True loop:
+     I moved the stats tracking inside the while True loop:
+      Code Change:
         while True:
         domain_stats = defaultdict(lambda: {"up": 0, "total": 0})
 
-  This way, the stats get cleared and start fresh every 15 seconds. It now shows the correct availability for just that cycle.
+      This way, the stats get cleared and start fresh every 15 seconds. It now shows the correct availability for just that cycle.
 
 
 Feature 3 : Input Validation
   Added the validation for mandatory fields like name and url. If its not present or null as part of yaml file then its skipped with the proper error log.
-
+      Code Change:
             for endpoint in config:
             required_fields = ["url", "name"]
             if "url" not in endpoint or not endpoint["url"]:
@@ -70,12 +75,14 @@ Feature 4: Per-Endpoint Health Logging
 
    The original code only showed domain-level availability. It was hard to know which specific endpoint was UP or DOWN.
     Fix: Added log
+     Code Change:
       print(f"The result of the endpoint '{endpoint['name']}' ({endpoint['url']}) is [{result}]")
       This helps clearly see the status of every individual endpoint during each cycle.
 
 
 
 Enhancement 1: Replaced print() with Structured Logging
+Code Change:
   logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -84,9 +91,23 @@ Enhancement 1: Replaced print() with Structured Logging
     ]
 )
 
+ Replaced all print() statements with Python’s built-in logging module. It also adds timestamps and log levels (INFO, WARNING, ERROR) to each message. It makes 
+ logs structured and easier to read. this format will be compatible with observability tools like Loki, New Relic, or any time-series database. This change 
+ improves traceability, supports long-term log storage, and helps with debugging and system health tracking in production environments.
 
- Replaced all print() statements with Python’s built-in logging module. It also adds timestamps and log levels (INFO, WARNING, ERROR) to each message. It makes logs structured and easier to read. this format will be compatible with observability tools like Loki, New Relic, or any time-series database
- This change improves traceability, supports long-term log storage, and helps with debugging and system health tracking in production environments.
+Enhancemnet 2: Better observability for request
+
+Code Change:
+          if(200 <= response.status_code < 300 and timeTaken > 500):
+            logging.warning(f"Request 200 but took more than 500ms for {url}")
+            return "DOWN"
+        if 200 <= response.status_code < 300:
+            return "UP"
+        else:
+            return "DOWN"
+
+ Separated the 500ms check as a induvidual condition so that i can log a warning for the request which are getting  2XX response but still considered invalid 
+ since its taking more than 500ms.
 
 
 
