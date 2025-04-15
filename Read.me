@@ -1,0 +1,135 @@
+# 🛠️ SRE Take Home Assignment – Endpoint Health Monitor
+
+## 📌 Overview
+
+This project is a health monitoring script that evaluates the availability of HTTP endpoints based on configuration from a YAML file. It performs checks every 15 seconds and logs the availability percentage for each domain. The system is designed to handle malformed inputs gracefully and focuses on correctness, performance, and clarity.
+
+---
+
+## 📥 Installation
+
+### ✅ Prerequisites
+- Python 3.6 or higher
+
+This project uses the following third-party packages:
+
+- **`pyyaml`** – For parsing the YAML configuration file
+- **`requests`** – For sending HTTP/HTTPS requests to endpoints
+
+Install them using `pip`:
+
+```bash
+pip install pyyaml requests
+
+
+
+
+
+
+
+
+✅ Features Implemented
+🔹 1. Response Time Check (< 500ms)
+The script measures response time per request.
+
+An endpoint is considered UP only if:
+
+It returns a 2xx HTTP status code
+
+Responds in less than 500 milliseconds
+
+🔹 2. Domain Grouping Without Port
+Endpoints are grouped by domain (ignoring ports).
+
+Example:
+
+example.com:8080 and example.com:443 are treated as example.com.
+
+🔹 3. Stats Reset Every Cycle
+Domain stats (up, total) are reset every 15 seconds.
+
+Each monitoring cycle generates a fresh snapshot.
+
+No historical data is carried over time.
+
+🔹 4. Input Validation (Skip Invalid Endpoints)
+Endpoints are skipped if:
+
+url or name is missing
+
+Either field is present but empty
+
+Logs a clear message for skipped entries:
+
+css
+Copy
+Edit
+⚠️ Skipping endpoint: missing or empty 'name' → {...}
+🔹 5. Per-Endpoint Health Logging
+Each endpoint's status is logged:
+
+bash
+Copy
+Edit
+The result of the endpoint 'sample index up' (https://...) is [UP]
+🔹 Default Method = GET
+If method is not defined in the YAML, it defaults to GET.
+
+This ensures safe handling of simple GET-only configs.
+
+🧪 Testing Performed
+✅ Validated multiple well-formed endpoints with different methods
+
+✅ Added malformed entries to test skipping logic
+
+✅ Confirmed the timer triggers every 15 seconds
+
+✅ Simulated slow endpoints to test 500ms timeout logic
+
+✅ Verified domain grouping and reset stats per run
+
+✅ Checked log clarity for both endpoint and domain availability
+
+📦 Example Output
+bash
+Copy
+Edit
+The result of the endpoint 'sample index up' (https://...) is [UP]
+The result of the endpoint 'sample error down' (https://...) is [DOWN]
+
+dev-sre-take-home-exercise-rubric.us-east-1.recruiting-public.fetchrewards.com has 50% availability percentage
+---
+👤 Author
+Lalit Rajendran
+Email: lalit@example.com
+GitHub: [github.com/your-profile] ← (replace with your actual profile)
+
+yaml
+Copy
+Edit
+
+---
+
+✅ You can now:
+- Paste this into a `README.md` file in your project folder
+- Customize your contact or GitHub profile link
+- Add a `sample.yaml` file for completeness if you like
+
+Need help creating that `sample.yaml` or turning this into a PDF for submission?
+
+
+
+
+
+
+
+
+
+
+
+Search
+
+Deep research
+
+
+
