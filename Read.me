@@ -75,6 +75,21 @@ Feature 4: Per-Endpoint Health Logging
 
 
 
+Enhancement 1: Replaced print() with Structured Logging
+  logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+
+
+ Replaced all print() statements with Python’s built-in logging module. It also adds timestamps and log levels (INFO, WARNING, ERROR) to each message. It makes logs structured and easier to read. this format will be compatible with observability tools like Loki, New Relic, or any time-series database
+ This change improves traceability, supports long-term log storage, and helps with debugging and system health tracking in production environments.
+
+
+
 
 
 
