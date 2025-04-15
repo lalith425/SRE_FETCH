@@ -186,7 +186,3 @@ To make sure slow responses (even with 200 OK) are treated as `DOWN` and are vis
 **Benefit:**  
 Improves observability and helps track degrading backend performance over time.
 
----
-
-Let me know if you'd like a matching `sample.yaml`, `test cases`, or markdown to PDF export!
-```
