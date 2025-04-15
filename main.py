@@ -2,7 +2,15 @@ import yaml
 import requests
 import time
 from collections import defaultdict
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
 # Function to load configuration from the YAML file
 def load_config(file_path):
     with open(file_path, 'r') as file:
@@ -22,7 +30,8 @@ def check_health(endpoint):
             return "UP"
         else:
             return "DOWN"
-    except requests.RequestException:
+    except requests.RequestException as e:
+        logging.error(f"Request failed for {url}: {e}")
         return "DOWN"
 
 # Main function to monitor endpoints
@@ -34,16 +43,16 @@ def monitor_endpoints(file_path):
         for endpoint in config:
             required_fields = ["url", "name"]
             if "url" not in endpoint or not endpoint["url"]:
-                print("URL field is mandatory so skipping the endpoint' → {endpoint}")
+                logging.warning(f"Skipping endpoint: missing or empty 'url' → {endpoint}")
                 continue
             if "name" not in endpoint or not endpoint["name"]:
-                print("Name field is mandatory so skipping the endpoint' → {endpoint}")
+                logging.warning(f"Skipping endpoint: missing or empty 'name' → {endpoint}")
                 continue    
 
             domainUrl = endpoint["url"].split("//")[-1].split("/")[0]
             domain = domainUrl.split(":")[0]
             result = check_health(endpoint)
-            print(f"The result of the endpoint '{endpoint['name']}' ({endpoint['url']}) is [{result}]")
+            logging.info(f"The result of the endpoint '{endpoint['name']}' ({endpoint['url']}) is [{result}]")
 
             domain_stats[domain]["total"] += 1
             if result == "UP":
@@ -52,9 +61,9 @@ def monitor_endpoints(file_path):
         # Log cumulative availability percentages
         for domain, stats in domain_stats.items():
             availability = round(100 * stats["up"] / stats["total"])
-            print(f"{domain} has {availability}% availability percentage")
+            logging.info(f"{domain} has {availability}% availability percentage")
 
-        print("---")
+        logging.info("✅ Completed health check cycle. Waiting for next cycle...\n")
         time.sleep(15)
 
 # Entry point of the program
@@ -62,11 +71,11 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) != 2:
-        print("Usage: python monitor.py <config_file_path>")
+        logging.error("Usage: python monitor.py <config_file_path>")
         sys.exit(1)
 
     config_file = sys.argv[1]
     try:
         monitor_endpoints(config_file)
     except KeyboardInterrupt:
-        print("\nMonitoring stopped by user.")
+        logging.info("Monitoring stopped by user.")
