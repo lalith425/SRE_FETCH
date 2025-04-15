@@ -1,135 +1,80 @@
-# 🛠️ SRE Take Home Assignment – Endpoint Health Monitor
+SRE FETCH Take Home Assignment – Endpoint Health Monitor
 
-## 📌 Overview
+Overview
 
 This project is a health monitoring script that evaluates the availability of HTTP endpoints based on configuration from a YAML file. It performs checks every 15 seconds and logs the availability percentage for each domain. The system is designed to handle malformed inputs gracefully and focuses on correctness, performance, and clarity.
 
----
+Installation
+  Prerequisites
+    Python 3.6 or higher
 
-## 📥 Installation
+ This project uses the following third-party packages:
 
-### ✅ Prerequisites
-- Python 3.6 or higher
+   pyyaml – For parsing the YAML configuration file
+   requests – For sending HTTP/HTTPS requests to endpoints
 
-This project uses the following third-party packages:
+Install them using pip:
 
-- **`pyyaml`** – For parsing the YAML configuration file
-- **`requests`** – For sending HTTP/HTTPS requests to endpoints
-
-Install them using `pip`:
-
-```bash
+Command:
 pip install pyyaml requests
 
+Issue 1: Initially when you run you will get the exception since one of the endpoints in the input doest have any methods. Since its null it will throw an exception.
+Solution: 
+   method = endpoint.get('method', 'GET')
+   Added the default value to GET and this ensures that endpoints without a specified method default to GET, as required by the assignment.
+
+Issue 2: Domain Grouping Without Port
+  As per the current code "endpoint["url"].split("//")[-1].split("/")[0]" works for simple URLs but fails when the URL includes a port number. Tested by giving the URL with port.
+Split the result further to remove the port:
+  domainUrl = endpoint["url"].split("//")[-1].split("/")[0]
+  domain = domainUrl.split(":")[0]
+
+ Once again tested it with port and its scaping only the domain.
+
+
+Feature 1:
+  Need to add the check for response time. If its more than 500ms it should be considered unavailable.
+        startReqTime = time.time()
+        response = requests.request(method, url, headers=headers, json=body)
+        timeTaken = (time.time() - startReqTime) * 1000
+        if 200 <= response.status_code < 300 and timeTaken < 500:
+
+ get the start time before sending the req and caclulate the time taken after receiving the responds and added the condition to check timetaken  less than 500ms.
+
+
+  Feature 2: Stats Reset Every Cycle
+    At first, the code was keeping track of domain stats outside the loop. That means the counts kept adding up forever — even after every 15-second check. So the 
+    availability percentage wasn’t accurate for each new cycle. It showed an average over time instead of just the current status.
+
+  Fix - I moved the stats tracking inside the while True loop:
+        while True:
+        domain_stats = defaultdict(lambda: {"up": 0, "total": 0})
+
+  This way, the stats get cleared and start fresh every 15 seconds. It now shows the correct availability for just that cycle.
+
+
+Feature 3 : Input Validation
+  Added the validation for mandatory fields like name and url. If its not present or null as part of yaml file then its skipped with the proper error log.
+
+            for endpoint in config:
+            required_fields = ["url", "name"]
+            if "url" not in endpoint or not endpoint["url"]:
+                print("URL field is mandatory so skipping the endpoint' → {endpoint}")
+                continue
+            if "name" not in endpoint or not endpoint["name"]:
+                print("Name field is mandatory so skipping the endpoint' → {endpoint}")
+                continue  
+
+
+Feature 4: Per-Endpoint Health Logging
+
+   The original code only showed domain-level availability. It was hard to know which specific endpoint was UP or DOWN.
+    Fix: Added log
+      print(f"The result of the endpoint '{endpoint['name']}' ({endpoint['url']}) is [{result}]")
+      This helps clearly see the status of every individual endpoint during each cycle.
 
 
 
-
-
-
-
-✅ Features Implemented
-🔹 1. Response Time Check (< 500ms)
-The script measures response time per request.
-
-An endpoint is considered UP only if:
-
-It returns a 2xx HTTP status code
-
-Responds in less than 500 milliseconds
-
-🔹 2. Domain Grouping Without Port
-Endpoints are grouped by domain (ignoring ports).
-
-Example:
-
-example.com:8080 and example.com:443 are treated as example.com.
-
-🔹 3. Stats Reset Every Cycle
-Domain stats (up, total) are reset every 15 seconds.
-
-Each monitoring cycle generates a fresh snapshot.
-
-No historical data is carried over time.
-
-🔹 4. Input Validation (Skip Invalid Endpoints)
-Endpoints are skipped if:
-
-url or name is missing
-
-Either field is present but empty
-
-Logs a clear message for skipped entries:
-
-css
-Copy
-Edit
-⚠️ Skipping endpoint: missing or empty 'name' → {...}
-🔹 5. Per-Endpoint Health Logging
-Each endpoint's status is logged:
-
-bash
-Copy
-Edit
-The result of the endpoint 'sample index up' (https://...) is [UP]
-🔹 Default Method = GET
-If method is not defined in the YAML, it defaults to GET.
-
-This ensures safe handling of simple GET-only configs.
-
-🧪 Testing Performed
-✅ Validated multiple well-formed endpoints with different methods
-
-✅ Added malformed entries to test skipping logic
-
-✅ Confirmed the timer triggers every 15 seconds
-
-✅ Simulated slow endpoints to test 500ms timeout logic
-
-✅ Verified domain grouping and reset stats per run
-
-✅ Checked log clarity for both endpoint and domain availability
-
-📦 Example Output
-bash
-Copy
-Edit
-The result of the endpoint 'sample index up' (https://...) is [UP]
-The result of the endpoint 'sample error down' (https://...) is [DOWN]
-
-dev-sre-take-home-exercise-rubric.us-east-1.recruiting-public.fetchrewards.com has 50% availability percentage
----
-👤 Author
-Lalit Rajendran
-Email: lalit@example.com
-GitHub: [github.com/your-profile] ← (replace with your actual profile)
-
-yaml
-Copy
-Edit
-
----
-
-✅ You can now:
-- Paste this into a `README.md` file in your project folder
-- Customize your contact or GitHub profile link
-- Add a `sample.yaml` file for completeness if you like
-
-Need help creating that `sample.yaml` or turning this into a PDF for submission?
-
-
-
-
-
-
-
-
-
-
-
-Search
-
-Deep research
 
 
 
