@@ -1,8 +1,4 @@
-Absolutely! Here's the **full and clean Markdown version** of your content, fully unbroken, ready to paste into `README.md`:
 
----
-
-```markdown
 # 🛠️ SRE FETCH Take Home Assignment – Endpoint Health Monitor
 
 ---
