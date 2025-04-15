@@ -24,9 +24,13 @@ def check_health(endpoint):
     body = endpoint.get('body')
     try:
         startReqTime = time.time()
+        time.sleep(1)
         response = requests.request(method, url, headers=headers, json=body)
         timeTaken = (time.time() - startReqTime) * 1000
-        if 200 <= response.status_code < 300 and timeTaken < 500:
+        if(200 <= response.status_code < 300 and timeTaken > 500):
+            logging.warning(f"Request 200 but took more than 500ms for {url}")
+            return "DOWN"
+        if 200 <= response.status_code < 300:
             return "UP"
         else:
             return "DOWN"
